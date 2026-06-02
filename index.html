@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Melodownload · Spotify Track Extractor</title>
+    <!-- Google Fonts & simple CSS reset -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 30%, #0a0f1c, #03050b);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        /* main glass-card container */
+        .downloader-container {
+            max-width: 760px;
+            width: 100%;
+            background: rgba(18, 22, 33, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.02) inset;
+            transition: all 0.2s ease;
+            padding: 2rem 1.8rem;
+        }
+
+        /* header section with spotify vibe */
+        .brand {
+            text-align: center;
+            margin-bottom: 2.2rem;
+        }
+        .brand h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFFFFF 30%, #1DB954 80%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand h1::before {
+            content: "♫";
+            background: none;
+            background-clip: unset;
+            -webkit-background-clip: unset;
+            color: #1DB954;
+            font-size: 2rem;
+            font-weight: 400;
+        }
+        .sub {
+            color: #a1a9c2;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            font-weight: 400;
+            border-top: 1px dashed rgba(29, 185, 84, 0.3);
+            display: inline-block;
+            padding-top: 8px;
+        }
+
+        /* input area */
+        .input-group {
+            background: rgba(12, 15, 25, 0.7);
+            border-radius: 3rem;
+            padding: 0.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 1.8rem;
+            border: 1px solid rgba(29, 185, 84, 0.2);
+            transition: all 0.2s;
+        }
+        .input-group:focus-within {
+            border-color: #1DB954;
+            box-shadow: 0 0 12px rgba(29, 185, 84, 0.2);
+        }
+        .input-group input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            color: #f0f3fa;
+            font-weight: 500;
+            outline: none;
+            font-family: 'Inter', monospace;
+            letter-spacing: -0.2px;
+        }
+        .input-group input::placeholder {
+            color: #6a6f87;
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+        .input-group button {
+            background: linear-gradient(105deg, #1DB954 0%, #17a74a 100%);
+            border: none;
+            padding: 0 2rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.2px;
+            box-shadow: 0 6px 14px rgba(29, 185, 84, 0.25);
+        }
+        .input-group button:hover {
+            transform: scale(1.02);
+            background: linear-gradient(105deg, #26c95f, #1aa64b);
+            box-shadow: 0 10px 20px rgba(29, 185, 84, 0.4);
+        }
+        .input-group button:active {
+            transform: scale(0.98);
+        }
+
+        /* result card area - dynamic */
+        .result-card {
+            margin-top: 2rem;
+            background: rgba(0, 0, 0, 0.45);
+            border-radius: 2rem;
+            padding: 1.8rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(4px);
+        }
+
+        /* song info layout */
+        .song-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.8rem;
+            align-items: flex-start;
+        }
+        .cover-area {
+            flex-shrink: 0;
+            border-radius: 1.2rem;
+            overflow: hidden;
+            box-shadow: 0 18px 30px -10px rgba(0, 0, 0, 0.5);
+            background: #0b0e17;
+            transition: transform 0.2s;
+        }
+        .cover-area img {
+            width: 160px;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+        }
+        .song-details {
+            flex: 1;
+            text-align: left;
+        }
+        .song-title {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.3px;
+            margin-bottom: 8px;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+        .artist-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #c0c7e0;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .artist-name::before {
+            content: "🎤";
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .album-name {
+            font-size: 0.9rem;
+            color: #8c93ae;
+            background: rgba(29, 185, 84, 0.12);
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 40px;
+            margin-top: 8px;
+            backdrop-filter: blur(2px);
+        }
+        .download-btn-wrapper {
+            margin-top: 24px;
+            text-align: left;
+        }
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: #1DB954;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            font-family: 'Inter', sans-serif;
+        }
+        .download-btn:hover {
+            background: #1ed760;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 22px rgba(29, 185, 84, 0.4);
+        }
+        .error-message {
+            background: rgba(255, 70, 70, 0.15);
+            border-left: 4px solid #ff5c5c;
+            padding: 1rem;
+            border-radius: 1rem;
+            color: #ffb4b4;
+            font-weight: 500;
+        }
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            gap: 12px;
+        }
+        .spinner {
+            width: 42px;
+            height: 42px;
+            border: 3px solid rgba(29, 185, 84, 0.2);
+            border-top: 3px solid #1DB954;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
+        }
+        .info-note {
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 1.8rem;
+            color: #5f6680;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 1.2rem;
+        }
+        .placeholder-text {
+            text-align: center;
+            color: #8f95ae;
+            padding: 1.8rem;
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 1.8rem;
+        }
+        button:disabled {
+            opacity: 0.6;
+            transform: none;
+            cursor: not-allowed;
+        }
+        @media (max-width: 580px) {
+            .downloader-container {
+                padding: 1.5rem;
+            }
+            .song-grid {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .song-details {
+                text-align: center;
+            }
+            .download-btn-wrapper {
+                text-align: center;
+            }
+            .cover-area img {
+                width: 140px;
+                height: 140px;
+            }
+            .song-title {
+                font-size: 1.4rem;
+            }
+        }
+        .highlight {
+            background: rgba(29, 185, 84, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+<div class="downloader-container">
+    <div class="brand">
+        <h1>Melodownload</h1>
+        <div class="sub">extract &nbsp;⚡ &nbsp; high-quality track info</div>
+    </div>
+
+    <div class="input-group">
+        <input 
+            type="text" 
+            id="songUrl" 
+            placeholder="https://open.spotify.com/track/... or Spotify track ID / URL"
+            autocomplete="off"
+        >
+        <button id="fetchBtn" onclick="downloadSong()">
+            <span>⟳</span> Get Song
+        </button>
+    </div>
+
+    <div id="result"></div>
+    <div class="info-note">
+        ⚡ Paste any Spotify track link • instant preview & download link
+    </div>
+</div>
+
+<script>
+    // ---------------- improved UI & robust API handling ----------------
+    // note: API key is same as original but using best practices (async error boundaries)
+    // DOM elements
+    const fetchButton = document.getElementById('fetchBtn');
+    const urlInput = document.getElementById('songUrl');
+
+    // helper: set loading state
+    function setLoading(isLoading) {
+        if (isLoading) {
+            fetchButton.disabled = true;
+            fetchButton.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px; margin-right:6px;"></span> Fetching...';
+        } else {
+            fetchButton.disabled = false;
+            fetchButton.innerHTML = '<span>⟳</span> Get Song';
+        }
+    }
+
+    // clear & show loading/error/data with gorgeous layout
+    function displayError(message, details = '') {
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `
+            <div class="result-card">
+                <div class="error-message">
+                    <strong>⚠️ Oops! ${message}</strong>
+                    ${details ? `<div style="font-size:0.8rem; margin-top:8px; opacity:0.8;">${details}</div>` : ''}
+                    <div style="margin-top:14px; font-size:0.85rem;">✨ Check your Spotify link and try again.</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function showLoadingUI() {
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `
+            <div class="result-card">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <div style="color:#b9c3e6;">Fetching track data from Spotify API...</div>
+                    <div style="font-size:0.75rem; color:#6c7595;">please wait a moment</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Main download function - enhanced with better parsing and error handling
+    window.downloadSong = async function() {
+        let rawUrl = urlInput.value.trim();
+        if (!rawUrl) {
+            displayError("URL missing", "Please enter a valid Spotify track URL or ID.");
+            return;
+        }
+
+        // smart extraction: if user pastes just the track ID or full link we clean it
+        let trackIdentifier = rawUrl;
+        // if it's a full spotify url, we try to extract the track ID part
+        // support patterns: https://open.spotify.com/track/6rqhFgbbKwnb9MLmUQDhG6 or track/ID
+        if (rawUrl.includes('spotify.com/track/')) {
+            const match = rawUrl.match(/track\/([a-zA-Z0-9]+)/);
+            if (match && match[1]) {
+                trackIdentifier = match[1];
+            } else {
+                // fallback but keep original
+                trackIdentifier = rawUrl;
+            }
+        } else if (rawUrl.match(/^[a-zA-Z0-9]{22}$/)) {
+            // if it's exactly a spotify track ID format (22 chars typical)
+            trackIdentifier = rawUrl;
+        }
+
+        // start loading animation & clear previous errors
+        showLoadingUI();
+        setLoading(true);
+
+        try {
+          
+            let apiParam = rawUrl;
+           
+
+            const rapidAPIKey = "a9d8dd292fmsh4e0d325b6531420p1592f7jsn0fbe4be42194";
+            const rapidAPIHost = "spotify-downloader9.p.rapidapi.com";
+            
+            const url = `https://spotify-downloader9.p.rapidapi.com/downloadSong?songId=${encodeURIComponent(apiParam)}`;
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+            
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "x-rapidapi-key": rapidAPIKey,
+                    "x-rapidapi-host": rapidAPIHost
+                },
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            
+            // log status for debugging (not shown to user)
+            console.log("API Status:", response.status);
+            
+            // parse JSON safely
+            let resultData;
+            const textResponse = await response.text(); // to debug if not json
+            try {
+                resultData = JSON.parse(textResponse);
+            } catch(e) {
+                console.error("JSON parse error", textResponse.slice(0,200));
+                throw new Error("Invalid response from server. Please try later.");
+            }
+            
+            // check API success flag (original uses result.success)
+            if (!response.ok) {
+                let errorMsg = `Server error ${response.status}`;
+                if (resultData && resultData.message) errorMsg = resultData.message;
+                throw new Error(errorMsg);
+            }
+            
+            // check business logic success: success flag or data presence
+            if (resultData && (resultData.success === true || resultData.success === "true") && resultData.data) {
+                renderSongCard(resultData.data);
+            } 
+            else if (resultData && resultData.data && (resultData.data.downloadLink || resultData.data.title)) {
+                // sometimes success flag may be missing but data exists
+                renderSongCard(resultData.data);
+            }
+            else {
+                // additional details from API error
+                let errDetail = resultData?.message || resultData?.error || "No download information available.";
+                throw new Error(errDetail);
+            }
+            
+        } catch (error) {
+            console.error("Download error:", error);
+            let friendlyMsg = "Failed to fetch song details.";
+            if (error.name === 'AbortError') friendlyMsg = "Request timeout. The server took too long to respond.";
+            else if (error.message.includes("Failed to fetch")) friendlyMsg = "Network error. Please check your connection.";
+            else friendlyMsg = error.message || "Unexpected API error.";
+            displayError(friendlyMsg, "Make sure the Spotify link is public and the API service is reachable.");
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // render gorgeous song card with download link (defensive mapping)
+    function renderSongCard(song) {
+        if (!song) {
+            displayError("Incomplete track data", "The API response missed essential song information.");
+            return;
+        }
+        
+        // map fields safely according to API structure (from original: song.title, song.artist, song.album, song.cover, song.downloadLink)
+        const title = song.title || song.name || "Unknown Title";
+        const artist = song.artist || song.artists || (song.artistName) || "Anonymous Artist";
+        const album = song.album || song.albumName || "Single";
+        const cover = song.cover || song.thumbnail || song.image || "https://placehold.co/400x400/1a1e2a/1DB954?text=🎵";
+        let downloadLink = song.downloadLink || song.downloadUrl || song.link || null;
+        
+        // sometimes API returns downloadLink inside 'media' or something? check extra fields
+        if (!downloadLink && song.songUrl) downloadLink = song.songUrl;
+        if (!downloadLink && song.url) downloadLink = song.url;
+        
+        // Ensure cover art URL is absolute (if relative fix maybe not needed)
+        const resultDiv = document.getElementById('result');
+        
+        // build html - with fallback if no download link
+        let downloadSection = '';
+        if (downloadLink && downloadLink !== '') {
+            downloadSection = `
+                <div class="download-btn-wrapper">
+                    <a href="${downloadLink}" target="_blank" rel="noopener noreferrer" class="download-btn">
+                        ⬇️ Download Track (MP3)
+                    </a>
+                    <p style="font-size:0.7rem; margin-top:10px; color:#7f88aa;">Direct link • right-click save as</p>
+                </div>
+            `;
+        } else {
+            downloadSection = `
+                <div class="download-btn-wrapper">
+                    <div style="background:#2a2f3f; border-radius:40px; padding:12px 20px; display:inline-block;">
+                        ⚠️ No download link available from API
+                    </div>
+                    <p style="font-size:0.75rem; margin-top:8px;">Try another track or refresh later</p>
+                </div>
+            `;
+        }
+        
+        // beautiful card rendering
+        const htmlContent = `
+            <div class="result-card">
+                <div class="song-grid">
+                    <div class="cover-area">
+                        <img src="${cover}" alt="album cover" onerror="this.src='https://placehold.co/400x400/11151f/1DB954?text=🎶'">
+                    </div>
+                    <div class="song-details">
+                        <div class="song-title">${escapeHtml(title)}</div>
+                        <div class="artist-name">${escapeHtml(artist)}</div>
+                        <div class="album-name">📀 ${escapeHtml(album)}</div>
+                        ${downloadSection}
+                    </div>
+                </div>
+                <div style="margin-top: 16px; font-size: 0.7rem; text-align: center; opacity:0.6;">
+                    🎧 Powered by Spotify Metadata • quality depends on source
+                </div>
+            </div>
+        `;
+        
+        resultDiv.innerHTML = htmlContent;
+    }
+    
+    // simple XSS protection helper
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+    
+    // allow pressing Enter key in the input field
+    urlInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            if (!fetchButton.disabled) {
+                downloadSong();
+            }
+        }
+    });
+    
+    // initial subtle placeholder content
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('result').innerHTML = `
+            <div class="result-card placeholder-text">
+                ✨ Paste your favorite Spotify track URL<br>
+                and click “Get Song” to preview & grab download link.
+            </div>
+        `;
+    });
+</script>
+</body>
+</html>
