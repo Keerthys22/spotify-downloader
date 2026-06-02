@@ -72,7 +72,7 @@
             padding-top: 8px;
         }
 
-        /* input area */
+        /* input area - FULLY RESPONSIVE BUTTON & LAYOUT */
         .input-group {
             background: rgba(12, 15, 25, 0.7);
             border-radius: 3rem;
@@ -99,12 +99,16 @@
             outline: none;
             font-family: 'Inter', monospace;
             letter-spacing: -0.2px;
+            min-width: 0; /* prevents overflow on mobile */
         }
         .input-group input::placeholder {
             color: #6a6f87;
             font-weight: 400;
             font-size: 0.9rem;
         }
+        
+        /* ========= RESPONSIVE BUTTON LOGIC ========= */
+        /* Base button styles — fluid & touch friendly */
         .input-group button {
             background: linear-gradient(105deg, #1DB954 0%, #17a74a 100%);
             border: none;
@@ -114,14 +118,72 @@
             font-size: 0.95rem;
             color: white;
             cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.2s;
+            transition: transform 0.15s, box-shadow 0.2s, padding 0.2s ease;
             display: flex;
             align-items: center;
             gap: 8px;
             font-family: 'Inter', sans-serif;
             letter-spacing: -0.2px;
             box-shadow: 0 6px 14px rgba(29, 185, 84, 0.25);
+            white-space: nowrap;
         }
+        
+        /* Desktop default (≥ 640px) */
+        @media (min-width: 641px) {
+            .input-group button {
+                padding: 0 2rem;
+                font-size: 0.95rem;
+                min-width: 130px;
+            }
+        }
+        
+        /* Tablet & small desktop (480px - 640px) — moderately compact */
+        @media (max-width: 640px) and (min-width: 481px) {
+            .input-group button {
+                padding: 0 1.4rem;
+                font-size: 0.85rem;
+                gap: 6px;
+            }
+            .input-group button span:first-child {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Mobile first (≤ 480px) — compact, touch-optimized but not tiny */
+        @media (max-width: 480px) {
+            .input-group {
+                gap: 10px;
+                padding: 0.25rem;
+            }
+            .input-group button {
+                padding: 0 1.1rem;
+                font-size: 0.8rem;
+                gap: 5px;
+                min-height: 48px;  /* improved tap target */
+                border-radius: 2.5rem;
+            }
+            .input-group button span:first-child {
+                font-size: 0.85rem;
+            }
+            .input-group input {
+                padding: 0.85rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Extra small devices (≤ 380px) — further refine */
+        @media (max-width: 380px) {
+            .input-group button {
+                padding: 0 0.9rem;
+                font-size: 0.75rem;
+                gap: 4px;
+            }
+            .input-group button span:first-child {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Hover/active effects remain */
         .input-group button:hover {
             transform: scale(1.02);
             background: linear-gradient(105deg, #26c95f, #1aa64b);
@@ -130,7 +192,19 @@
         .input-group button:active {
             transform: scale(0.98);
         }
-
+        
+        /* loading state inside button keeps responsiveness */
+        .input-group button .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-right: 4px;
+        }
+        
         /* result card area - dynamic */
         .result-card {
             margin-top: 2rem;
@@ -184,6 +258,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-wrap: wrap;
         }
         .artist-name::before {
             content: "🎤";
@@ -275,6 +350,8 @@
             transform: none;
             cursor: not-allowed;
         }
+        
+        /* Mobile result adjustments */
         @media (max-width: 580px) {
             .downloader-container {
                 padding: 1.5rem;
@@ -297,9 +374,20 @@
             .song-title {
                 font-size: 1.4rem;
             }
+            .artist-name {
+                justify-content: center;
+            }
         }
-        .highlight {
-            background: rgba(29, 185, 84, 0.05);
+        
+        /* special touch for very narrow screens (optional inline button wrap protection) */
+        @media (max-width: 400px) {
+            .input-group button {
+                padding: 0 0.8rem;
+                font-size: 0.7rem;
+            }
+            .brand h1 {
+                font-size: 1.8rem;
+            }
         }
     </style>
 </head>
@@ -331,30 +419,28 @@
 
 <script>
     // ---------------- improved UI & robust API handling ----------------
-    // note: API key is same as original but using best practices (async error boundaries)
-    // DOM elements
     const fetchButton = document.getElementById('fetchBtn');
     const urlInput = document.getElementById('songUrl');
 
-    // helper: set loading state
+    // Helper: set loading state (with responsive spinner inside button)
     function setLoading(isLoading) {
         if (isLoading) {
             fetchButton.disabled = true;
-            fetchButton.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px; margin-right:6px;"></span> Fetching...';
+            // Keep button content compact but with inline spinner
+            fetchButton.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px; margin-right:4px;"></span><span style="margin-left:2px;">Getting...</span>';
         } else {
             fetchButton.disabled = false;
             fetchButton.innerHTML = '<span>⟳</span> Get Song';
         }
     }
 
-    // clear & show loading/error/data with gorgeous layout
     function displayError(message, details = '') {
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = `
             <div class="result-card">
                 <div class="error-message">
-                    <strong>⚠️ Oops! ${message}</strong>
-                    ${details ? `<div style="font-size:0.8rem; margin-top:8px; opacity:0.8;">${details}</div>` : ''}
+                    <strong>⚠️ Oops! ${escapeHtml(message)}</strong>
+                    ${details ? `<div style="font-size:0.8rem; margin-top:8px; opacity:0.8;">${escapeHtml(details)}</div>` : ''}
                     <div style="margin-top:14px; font-size:0.85rem;">✨ Check your Spotify link and try again.</div>
                 </div>
             </div>
@@ -367,14 +453,14 @@
             <div class="result-card">
                 <div class="loading-spinner">
                     <div class="spinner"></div>
-                    <div style="color:#b9c3e6;">Fetching track data from Spotify API...</div>
+                    <div style="color:#b9c3e6;">Fetching track data ... </div>
                     <div style="font-size:0.75rem; color:#6c7595;">please wait a moment</div>
                 </div>
             </div>
         `;
     }
 
-    // Main download function - enhanced with better parsing and error handling
+    // main download function
     window.downloadSong = async function() {
         let rawUrl = urlInput.value.trim();
         if (!rawUrl) {
@@ -382,39 +468,31 @@
             return;
         }
 
-        // smart extraction: if user pastes just the track ID or full link we clean it
+        // smart extraction (optional but kept for robustness)
         let trackIdentifier = rawUrl;
-        // if it's a full spotify url, we try to extract the track ID part
-        // support patterns: https://open.spotify.com/track/6rqhFgbbKwnb9MLmUQDhG6 or track/ID
         if (rawUrl.includes('spotify.com/track/')) {
             const match = rawUrl.match(/track\/([a-zA-Z0-9]+)/);
             if (match && match[1]) {
                 trackIdentifier = match[1];
             } else {
-                // fallback but keep original
                 trackIdentifier = rawUrl;
             }
         } else if (rawUrl.match(/^[a-zA-Z0-9]{22}$/)) {
-            // if it's exactly a spotify track ID format (22 chars typical)
             trackIdentifier = rawUrl;
         }
 
-        // start loading animation & clear previous errors
         showLoadingUI();
         setLoading(true);
 
         try {
-          
-            let apiParam = rawUrl;
-           
-
+            let apiParam = rawUrl;  // use raw url for compatibility
             const rapidAPIKey = "a9d8dd292fmsh4e0d325b6531420p1592f7jsn0fbe4be42194";
             const rapidAPIHost = "spotify-downloader9.p.rapidapi.com";
             
             const url = `https://spotify-downloader9.p.rapidapi.com/downloadSong?songId=${encodeURIComponent(apiParam)}`;
             
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 25000);
             
             const response = await fetch(url, {
                 method: "GET",
@@ -426,12 +504,10 @@
             });
             clearTimeout(timeoutId);
             
-            // log status for debugging (not shown to user)
             console.log("API Status:", response.status);
             
-            // parse JSON safely
             let resultData;
-            const textResponse = await response.text(); // to debug if not json
+            const textResponse = await response.text();
             try {
                 resultData = JSON.parse(textResponse);
             } catch(e) {
@@ -439,23 +515,19 @@
                 throw new Error("Invalid response from server. Please try later.");
             }
             
-            // check API success flag (original uses result.success)
             if (!response.ok) {
                 let errorMsg = `Server error ${response.status}`;
                 if (resultData && resultData.message) errorMsg = resultData.message;
                 throw new Error(errorMsg);
             }
             
-            // check business logic success: success flag or data presence
             if (resultData && (resultData.success === true || resultData.success === "true") && resultData.data) {
                 renderSongCard(resultData.data);
             } 
             else if (resultData && resultData.data && (resultData.data.downloadLink || resultData.data.title)) {
-                // sometimes success flag may be missing but data exists
                 renderSongCard(resultData.data);
             }
             else {
-                // additional details from API error
                 let errDetail = resultData?.message || resultData?.error || "No download information available.";
                 throw new Error(errDetail);
             }
@@ -465,40 +537,36 @@
             let friendlyMsg = "Failed to fetch song details.";
             if (error.name === 'AbortError') friendlyMsg = "Request timeout. The server took too long to respond.";
             else if (error.message.includes("Failed to fetch")) friendlyMsg = "Network error. Please check your connection.";
-            else friendlyMsg = error.message || "Unexpected API error.";
-            displayError(friendlyMsg, "Make sure the Spotify link is public and the API service is reachable.");
+            else friendlyMsg = error.message || "Unexpected error.";
+            displayError(friendlyMsg, "Make sure the Spotify link is public.");
         } finally {
             setLoading(false);
         }
     };
     
-    // render gorgeous song card with download link (defensive mapping)
+    // render song card
     function renderSongCard(song) {
         if (!song) {
-            displayError("Incomplete track data", "The API response missed essential song information.");
+            displayError("Incomplete track data", "The response missed essential song information.");
             return;
         }
         
-        // map fields safely according to API structure (from original: song.title, song.artist, song.album, song.cover, song.downloadLink)
         const title = song.title || song.name || "Unknown Title";
         const artist = song.artist || song.artists || (song.artistName) || "Anonymous Artist";
         const album = song.album || song.albumName || "Single";
         const cover = song.cover || song.thumbnail || song.image || "https://placehold.co/400x400/1a1e2a/1DB954?text=🎵";
         let downloadLink = song.downloadLink || song.downloadUrl || song.link || null;
         
-        // sometimes API returns downloadLink inside 'media' or something? check extra fields
         if (!downloadLink && song.songUrl) downloadLink = song.songUrl;
         if (!downloadLink && song.url) downloadLink = song.url;
         
-        // Ensure cover art URL is absolute (if relative fix maybe not needed)
         const resultDiv = document.getElementById('result');
         
-        // build html - with fallback if no download link
         let downloadSection = '';
         if (downloadLink && downloadLink !== '') {
             downloadSection = `
                 <div class="download-btn-wrapper">
-                    <a href="${downloadLink}" target="_blank" rel="noopener noreferrer" class="download-btn">
+                    <a href="${escapeHtmlAttr(downloadLink)}" target="_blank" rel="noopener noreferrer" class="download-btn">
                         ⬇️ Download Track (MP3)
                     </a>
                     <p style="font-size:0.7rem; margin-top:10px; color:#7f88aa;">Direct link • right-click save as</p>
@@ -515,12 +583,11 @@
             `;
         }
         
-        // beautiful card rendering
         const htmlContent = `
             <div class="result-card">
                 <div class="song-grid">
                     <div class="cover-area">
-                        <img src="${cover}" alt="album cover" onerror="this.src='https://placehold.co/400x400/11151f/1DB954?text=🎶'">
+                        <img src="${escapeHtmlAttr(cover)}" alt="album cover" onerror="this.src='https://placehold.co/400x400/11151f/1DB954?text=🎶'">
                     </div>
                     <div class="song-details">
                         <div class="song-title">${escapeHtml(title)}</div>
@@ -538,7 +605,7 @@
         resultDiv.innerHTML = htmlContent;
     }
     
-    // simple XSS protection helper
+    // XSS protection helpers
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) {
@@ -546,12 +613,20 @@
             if (m === '<') return '&lt;';
             if (m === '>') return '&gt;';
             return m;
-        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-            return c;
         });
     }
     
-    // allow pressing Enter key in the input field
+    function escapeHtmlAttr(str) {
+        if (!str) return '';
+        return str.replace(/[&"']/g, function(match) {
+            if (match === '&') return '&amp;';
+            if (match === '"') return '&quot;';
+            if (match === "'") return '&#39;';
+            return match;
+        });
+    }
+    
+    // Enter key support
     urlInput.addEventListener('keypress', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
@@ -561,7 +636,7 @@
         }
     });
     
-    // initial subtle placeholder content
+    // initial placeholder
     window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result').innerHTML = `
             <div class="result-card placeholder-text">
