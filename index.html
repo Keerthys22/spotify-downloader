@@ -99,7 +99,7 @@
             outline: none;
             font-family: 'Inter', monospace;
             letter-spacing: -0.2px;
-            min-width: 0; /* prevents overflow on mobile */
+            min-width: 0;
         }
         .input-group input::placeholder {
             color: #6a6f87;
@@ -108,7 +108,6 @@
         }
         
         /* ========= RESPONSIVE BUTTON LOGIC ========= */
-        /* Base button styles — fluid & touch friendly */
         .input-group button {
             background: linear-gradient(105deg, #1DB954 0%, #17a74a 100%);
             border: none;
@@ -128,7 +127,6 @@
             white-space: nowrap;
         }
         
-        /* Desktop default (≥ 640px) */
         @media (min-width: 641px) {
             .input-group button {
                 padding: 0 2rem;
@@ -137,7 +135,6 @@
             }
         }
         
-        /* Tablet & small desktop (480px - 640px) — moderately compact */
         @media (max-width: 640px) and (min-width: 481px) {
             .input-group button {
                 padding: 0 1.4rem;
@@ -149,7 +146,6 @@
             }
         }
         
-        /* Mobile first (≤ 480px) — compact, touch-optimized but not tiny */
         @media (max-width: 480px) {
             .input-group {
                 gap: 10px;
@@ -159,7 +155,7 @@
                 padding: 0 1.1rem;
                 font-size: 0.8rem;
                 gap: 5px;
-                min-height: 48px;  /* improved tap target */
+                min-height: 48px;
                 border-radius: 2.5rem;
             }
             .input-group button span:first-child {
@@ -171,7 +167,6 @@
             }
         }
         
-        /* Extra small devices (≤ 380px) — further refine */
         @media (max-width: 380px) {
             .input-group button {
                 padding: 0 0.9rem;
@@ -183,7 +178,6 @@
             }
         }
         
-        /* Hover/active effects remain */
         .input-group button:hover {
             transform: scale(1.02);
             background: linear-gradient(105deg, #26c95f, #1aa64b);
@@ -193,7 +187,6 @@
             transform: scale(0.98);
         }
         
-        /* loading state inside button keeps responsiveness */
         .input-group button .spinner {
             display: inline-block;
             width: 16px;
@@ -205,7 +198,7 @@
             margin-right: 4px;
         }
         
-        /* result card area - dynamic */
+        /* result card area */
         .result-card {
             margin-top: 2rem;
             background: rgba(0, 0, 0, 0.45);
@@ -216,7 +209,6 @@
             backdrop-filter: blur(4px);
         }
 
-        /* song info layout */
         .song-grid {
             display: flex;
             flex-wrap: wrap;
@@ -229,7 +221,6 @@
             overflow: hidden;
             box-shadow: 0 18px 30px -10px rgba(0, 0, 0, 0.5);
             background: #0b0e17;
-            transition: transform 0.2s;
         }
         .cover-area img {
             width: 160px;
@@ -251,7 +242,7 @@
             word-break: break-word;
         }
         .artist-name {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 500;
             color: #c0c7e0;
             margin-bottom: 8px;
@@ -265,15 +256,45 @@
             font-size: 0.9rem;
             opacity: 0.8;
         }
+        .track-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 12px 0 8px 0;
+            align-items: center;
+        }
+        .duration-badge {
+            background: rgba(29, 185, 84, 0.15);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #b3f0c4;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .quality-badge {
+            background: rgba(255, 193, 7, 0.15);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #ffd966;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
         .album-name {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #8c93ae;
             background: rgba(29, 185, 84, 0.12);
             display: inline-block;
             padding: 4px 12px;
             border-radius: 40px;
             margin-top: 8px;
-            backdrop-filter: blur(2px);
         }
         .download-btn-wrapper {
             margin-top: 24px;
@@ -351,7 +372,6 @@
             cursor: not-allowed;
         }
         
-        /* Mobile result adjustments */
         @media (max-width: 580px) {
             .downloader-container {
                 padding: 1.5rem;
@@ -377,9 +397,11 @@
             .artist-name {
                 justify-content: center;
             }
+            .track-meta {
+                justify-content: center;
+            }
         }
         
-        /* special touch for very narrow screens (optional inline button wrap protection) */
         @media (max-width: 400px) {
             .input-group button {
                 padding: 0 0.8rem;
@@ -418,15 +440,28 @@
 </div>
 
 <script>
-    // ---------------- improved UI & robust API handling ----------------
+    // ==================== UPDATED FOR NEW API ENDPOINT STRUCTURE ====================
+    // API Response Format (based on provided data):
+    // {
+    //   success: true,
+    //   message: "success", 
+    //   data: {
+    //     title: "...", 
+    //     author: "...", 
+    //     thumbnail: "...", 
+    //     duration: "4:08",
+    //     medias: [{ url: "...", quality: "HQ", extension: "mp3" }],
+    //     audioPreview: "...",
+    //     ...
+    //   }
+    // }
+    
     const fetchButton = document.getElementById('fetchBtn');
     const urlInput = document.getElementById('songUrl');
 
-    // Helper: set loading state (with responsive spinner inside button)
     function setLoading(isLoading) {
         if (isLoading) {
             fetchButton.disabled = true;
-            // Keep button content compact but with inline spinner
             fetchButton.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px; margin-right:4px;"></span><span style="margin-left:2px;">Getting...</span>';
         } else {
             fetchButton.disabled = false;
@@ -453,14 +488,47 @@
             <div class="result-card">
                 <div class="loading-spinner">
                     <div class="spinner"></div>
-                    <div style="color:#b9c3e6;">Fetching track data ... </div>
+                    <div style="color:#b9c3e6;">Fetching track data from Spotify...</div>
                     <div style="font-size:0.75rem; color:#6c7595;">please wait a moment</div>
                 </div>
             </div>
         `;
     }
 
-    // main download function
+    // Helper: extract download URL from medias array (best quality)
+    function getDownloadUrlFromMedias(medias) {
+        if (!medias || !Array.isArray(medias) || medias.length === 0) return null;
+        // Look for audio type with mp3 extension, prioritize HQ
+        const audioMedia = medias.find(m => m.type === 'audio' || m.extension === 'mp3');
+        if (audioMedia && audioMedia.url) return audioMedia.url;
+        // fallback: first media with url
+        const firstValid = medias.find(m => m.url);
+        return firstValid ? firstValid.url : null;
+    }
+
+    // Helper: get quality info from medias
+    function getQualityFromMedias(medias) {
+        if (!medias || !Array.isArray(medias) || medias.length === 0) return null;
+        const audioMedia = medias.find(m => m.type === 'audio' || m.extension === 'mp3');
+        return audioMedia?.quality || medias[0]?.quality || null;
+    }
+
+    // Format duration helper (handles "4:08" format or seconds)
+    function formatDurationDisplay(duration) {
+        if (!duration) return null;
+        // if already in MM:SS format
+        if (typeof duration === 'string' && duration.includes(':')) return duration;
+        // if numeric seconds
+        const seconds = parseInt(duration);
+        if (!isNaN(seconds) && seconds > 0) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        return duration;
+    }
+
+    // Main download function - UPDATED for new endpoint structure
     window.downloadSong = async function() {
         let rawUrl = urlInput.value.trim();
         if (!rawUrl) {
@@ -468,31 +536,19 @@
             return;
         }
 
-        // smart extraction (optional but kept for robustness)
-        let trackIdentifier = rawUrl;
-        if (rawUrl.includes('spotify.com/track/')) {
-            const match = rawUrl.match(/track\/([a-zA-Z0-9]+)/);
-            if (match && match[1]) {
-                trackIdentifier = match[1];
-            } else {
-                trackIdentifier = rawUrl;
-            }
-        } else if (rawUrl.match(/^[a-zA-Z0-9]{22}$/)) {
-            trackIdentifier = rawUrl;
-        }
-
         showLoadingUI();
         setLoading(true);
 
         try {
-            let apiParam = rawUrl;  // use raw url for compatibility
+            // Use your new endpoint configuration
+            // IMPORTANT: Replace with your actual API endpoint if different
+            // Based on your description, same RapidAPI host but response structure changed
             const rapidAPIKey = "a9d8dd292fmsh4e0d325b6531420p1592f7jsn0fbe4be42194";
-            const rapidAPIHost = "spotify-downloader9.p.rapidapi.com";
+            const rapidAPIHost = "spotify-music-mp3-downloader-api.p.rapidapi.com";
             
-            const url = `https://spotify-downloader9.p.rapidapi.com/downloadSong?songId=${encodeURIComponent(apiParam)}`;
-            
+            const url =  `https://spotify-music-mp3-downloader-api.p.rapidapi.com/download?link=${encodeURIComponent(rawUrl)}`;
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 25000);
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
             
             const response = await fetch(url, {
                 method: "GET",
@@ -512,7 +568,7 @@
                 resultData = JSON.parse(textResponse);
             } catch(e) {
                 console.error("JSON parse error", textResponse.slice(0,200));
-                throw new Error("Invalid response from server. Please try later.");
+                throw new Error("Invalid response from server.");
             }
             
             if (!response.ok) {
@@ -521,14 +577,15 @@
                 throw new Error(errorMsg);
             }
             
-            if (resultData && (resultData.success === true || resultData.success === "true") && resultData.data) {
-                renderSongCard(resultData.data);
+            // NEW: Check for success flag and data object (based on your new endpoint)
+            if (resultData && resultData.success === true && resultData.data) {
+                renderSongCardNew(resultData.data);
             } 
-            else if (resultData && resultData.data && (resultData.data.downloadLink || resultData.data.title)) {
-                renderSongCard(resultData.data);
+            else if (resultData && resultData.data && (resultData.data.title || resultData.data.medias)) {
+                renderSongCardNew(resultData.data);
             }
             else {
-                let errDetail = resultData?.message || resultData?.error || "No download information available.";
+                let errDetail = resultData?.message || resultData?.error || "No track information returned.";
                 throw new Error(errDetail);
             }
             
@@ -537,28 +594,51 @@
             let friendlyMsg = "Failed to fetch song details.";
             if (error.name === 'AbortError') friendlyMsg = "Request timeout. The server took too long to respond.";
             else if (error.message.includes("Failed to fetch")) friendlyMsg = "Network error. Please check your connection.";
-            else friendlyMsg = error.message || "Unexpected error.";
-            displayError(friendlyMsg, "Make sure the Spotify link is public.");
+            else friendlyMsg = error.message || "Unexpected API error.";
+            displayError(friendlyMsg, "Make sure the Spotify link is public and valid.");
         } finally {
             setLoading(false);
         }
     };
     
-    // render song card
-    function renderSongCard(song) {
-        if (!song) {
-            displayError("Incomplete track data", "The response missed essential song information.");
+    // NEW render function for the updated API structure (title, author, thumbnail, medias, duration, etc.)
+    function renderSongCardNew(songData) {
+        if (!songData) {
+            displayError("Incomplete track data", "The API response missed essential song information.");
             return;
         }
         
-        const title = song.title || song.name || "Unknown Title";
-        const artist = song.artist || song.artists || (song.artistName) || "Anonymous Artist";
-        const album = song.album || song.albumName || "Single";
-        const cover = song.cover || song.thumbnail || song.image || "https://placehold.co/400x400/1a1e2a/1DB954?text=🎵";
-        let downloadLink = song.downloadLink || song.downloadUrl || song.link || null;
+        // Map fields according to your new endpoint structure:
+        // data.title, data.author, data.thumbnail, data.duration, data.medias[].url, data.audioPreview
+        const title = songData.title || songData.name || "Unknown Title";
+        // author field contains artist(s)
+        const artist = songData.author || songData.artist || songData.artists || "Anonymous Artist";
+        // thumbnail is the cover image
+        const cover = songData.thumbnail || songData.cover || songData.image || "https://placehold.co/400x400/1a1e2a/1DB954?text=🎵";
+        // duration from API (format like "4:08")
+        const durationRaw = songData.duration || songData.duration_sec || null;
+        const durationFormatted = formatDurationDisplay(durationRaw);
         
-        if (!downloadLink && song.songUrl) downloadLink = song.songUrl;
-        if (!downloadLink && song.url) downloadLink = song.url;
+        // Get download link from medias array (primary)
+        let downloadLink = null;
+        let quality = null;
+        
+        if (songData.medias && Array.isArray(songData.medias) && songData.medias.length > 0) {
+            downloadLink = getDownloadUrlFromMedias(songData.medias);
+            quality = getQualityFromMedias(songData.medias);
+        }
+        
+        // Fallback: audioPreview or direct downloadLink field
+        if (!downloadLink && songData.audioPreview) {
+            downloadLink = songData.audioPreview;
+            quality = "Preview";
+        }
+        if (!downloadLink && songData.downloadLink) downloadLink = songData.downloadLink;
+        if (!downloadLink && songData.url) downloadLink = songData.url;
+        
+        // Additional metadata: track_id, source, year might be present
+        const trackId = songData.track_id || songData.id || null;
+        const source = songData.source || "Spotify";
         
         const resultDiv = document.getElementById('result');
         
@@ -567,21 +647,33 @@
             downloadSection = `
                 <div class="download-btn-wrapper">
                     <a href="${escapeHtmlAttr(downloadLink)}" target="_blank" rel="noopener noreferrer" class="download-btn">
-                        ⬇️ Download Track (MP3)
+                        ⬇️ Download Track ${quality ? `(${quality})` : '(MP3)'}
                     </a>
-                    <p style="font-size:0.7rem; margin-top:10px; color:#7f88aa;">Direct link • right-click save as</p>
+                    <p style="font-size:0.7rem; margin-top:10px; color:#7f88aa;">Direct high-quality link • right-click save as</p>
                 </div>
             `;
         } else {
             downloadSection = `
                 <div class="download-btn-wrapper">
                     <div style="background:#2a2f3f; border-radius:40px; padding:12px 20px; display:inline-block;">
-                        ⚠️ No download link available from API
+                        ⚠️ No download link available
                     </div>
                     <p style="font-size:0.75rem; margin-top:8px;">Try another track or refresh later</p>
                 </div>
             `;
         }
+        
+        // Meta badges HTML
+        const metaBadges = `
+            <div class="track-meta">
+                ${durationFormatted ? `<span class="duration-badge">⏱️ ${escapeHtml(durationFormatted)}</span>` : ''}
+                ${quality ? `<span class="quality-badge">🎧 ${escapeHtml(quality)}</span>` : ''}
+                ${trackId ? `<span style="background:rgba(100,100,150,0.2); padding:4px 10px; border-radius:40px; font-size:0.7rem;">🔗 ${escapeHtml(trackId.substring(0,12))}${trackId.length > 12 ? '…' : ''}</span>` : ''}
+            </div>
+        `;
+        
+        // Optional: Show source badge
+        const sourceBadge = source ? `<div style="font-size:0.7rem; margin-top:6px; color:#6c7890;">source: ${escapeHtml(source)}</div>` : '';
         
         const htmlContent = `
             <div class="result-card">
@@ -592,12 +684,14 @@
                     <div class="song-details">
                         <div class="song-title">${escapeHtml(title)}</div>
                         <div class="artist-name">${escapeHtml(artist)}</div>
-                        <div class="album-name">📀 ${escapeHtml(album)}</div>
+                        ${metaBadges}
+                        <div class="album-name">📀 Spotify Track</div>
+                        ${sourceBadge}
                         ${downloadSection}
                     </div>
                 </div>
-                <div style="margin-top: 16px; font-size: 0.7rem; text-align: center; opacity:0.6;">
-                    🎧 Powered by Spotify Metadata • quality depends on source
+                <div style="margin-top: 16px; font-size: 0.7rem; text-align: center; opacity:0.5;">
+                    🎧 Powered by Spotify API • High Quality Audio
                 </div>
             </div>
         `;
